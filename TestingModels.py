@@ -504,3 +504,43 @@ inc.yaxis.axis_label = 'Predicted - True'
 out = gridplot([[deets, hstz], [deeta, hsta], [tot, inc]])
 bokeh.io.save(out, 'FullMCUnbroken.html')
 
+plt.clf()
+
+#Plot a scatter plot of gradients with histograms
+# definitions for the axes
+left, width = 0.1, 0.65
+bottom, height = 0.1, 0.65
+spacing = 0.005
+rect_scatter = [left, bottom, width, height]
+rect_histx = [left, bottom + height + spacing, width, 0.2]
+rect_histy = [left + width + spacing, bottom, 0.2, height]
+# start with a rectangular Figure
+plt.figure(figsize=(8, 8))
+ax_scatter = plt.axes(rect_scatter)
+ax_scatter.tick_params(direction='in', top=True, right=True)
+ax_histx = plt.axes(rect_histx)
+ax_histx.tick_params(direction='in', labelbottom=False)
+ax_histy = plt.axes(rect_histy)
+ax_histy.tick_params(direction='in', labelleft=False)
+
+# Plotting the data
+ax_scatter.errorbar(MCzgrad, MCagrad,  yerr = ageerror, xerr = zerror, fmt = 'kx', ecolor = 'r')#  the scatter plot
+# now determine nice limits by hand:
+binwidth = 0.1
+lim = np.ceil(np.abs([MCzgrad, MCagrad]).max() / binwidth) * binwidth
+ax_scatter.set_xlim((-lim, lim))
+ax_scatter.set_ylim((-lim, lim))
+ax_scatter.set_xlabel('grad(Z_pred) - grad(Z_spec)')
+ax_scatter.set_ylabel('grad(Age_pred) - grad(Age_spec)')
+bins = np.arange(-lim, lim + binwidth, binwidth)
+ax_histx.hist(MCzgrad, bins=bins, color = 'k') #Top histogram
+ax_histx.set_ylabel('Count')
+ax_histy.hist(MCagrad, bins=bins, orientation='horizontal', color = 'k') #Right histogram
+ax_histy.set_xlabel('Count')
+
+ax_histx.set_xlim(ax_scatter.get_xlim())
+ax_histy.set_ylim(ax_scatter.get_ylim())
+
+plt.savefig('ScatteredHists.png')
+
+
