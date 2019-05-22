@@ -382,6 +382,21 @@ for phi in Lgals: #Iterate fitting over each galaxy
   plt.legend()
   plt.savefig(fname)
   
+  #Plot of true vs pred for the galaxy
+  plt.clf()
+  plt.subplot(122)
+  plt.plot(age, apred, 'kx')
+  plt.plot([min(apred), max(apred)], [min(apred), max(apred)], 'r')
+  plt.xlabel('Age_true')
+  plt.ylabel('Age_pred')
+  plt.subplot(121)
+  plt.plot(Z, zpred, 'kx')
+  plt.plot([min(zpred), max(zpred)], [min(zpred), max(zpred)], 'r')
+  plt.xlabel('Z_true')
+  plt.ylabel('Z_pred')
+  plt.savefig('Hyperas/' + phi + 'TrueVsPred.png')
+
+  
   #Values for a summary plot
   dz = a1 - a0
   da = a3 - a2
