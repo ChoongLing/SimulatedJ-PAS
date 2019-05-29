@@ -1,5 +1,4 @@
 from hyperopt import Trials, STATUS_OK, tpe
-#from hyperas 
 import optim
 from hyperopt.hp import choice
 from hyperopt.hp import uniform
@@ -9,8 +8,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
 import pandas as pd
-#import matplotlib
-#matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import seaborn as sns
@@ -29,7 +26,6 @@ tf.enable_eager_execution()
 def create_model(normed_train_data, normed_test_data, train_labels, test_labels):
   #Build the CNN
   model= keras.models.Sequential()
-  #model.add(layers.Input(shape=(32,))) #input spectra
   model.add(layers.Reshape((32, 1))) #reshape for use in CNN
   # CNN layers
   model.add(layers.Conv1D(activation='relu',# kernel_initializer=initializer, 
@@ -47,7 +43,6 @@ def create_model(normed_train_data, normed_test_data, train_labels, test_labels)
   model.add(layers.Dense(units={{choice([25, 30, 33, 35, 40])}},# kernel_initializer=initializer, 
 		activation='relu'))
   model.add(layers.Dense(units=1, activation="linear"))#, #output layer
-                     #input_dim=33)(MidLayer)
 
   optimizer = tf.train.RMSPropOptimizer(0.001)
   model.compile(loss='mse', optimizer=optimizer, metrics=['mae', 'mse'])  
@@ -90,7 +85,7 @@ def data():
   datasetA = dataset.copy()
 
   #Build dataset of galaxies
-  GroupA = datasetA.copy()#loc[dataset['name'].isin(notI)]# == Agals]
+  GroupA = datasetA.copy()
   GroupA = GroupA.drop(columns = 'name')
 
   smalldataset1 = GroupA.sample(frac = 1, random_state = 0) #dataset of 8400 rows
