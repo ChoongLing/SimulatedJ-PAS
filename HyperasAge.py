@@ -26,13 +26,12 @@ tf.enable_eager_execution()
 def create_model(normed_train_data, normed_test_data, train_labels, test_labels):
   #Build the CNN
   model= keras.models.Sequential()
-  #model.add(layers.Input(shape=(32,))) #input spectra
   model.add(layers.Reshape((32, 1))) #reshape for use in CNN
   # CNN layers
-  model.add(layers.Conv1D(activation='relu',# kernel_initializer=initializer, 
+  model.add(layers.Conv1D(activation='relu', 
 		  padding="same", filters={{choice([8, 16, 20, 25, 30, 33, 35, 40, 45, 50, 55, 60, 64])}}, 
 		  kernel_size={{choice([6, 8, 10, 12])}}))  
-  model.add(layers.Conv1D(activation='relu',# kernel_initializer=initializer, 
+  model.add(layers.Conv1D(activation='relu',
 		  padding="same", filters={{choice([8, 16, 20, 25, 30, 33, 35, 40, 45, 50, 55, 60, 64])}}, 
 		  kernel_size={{choice([6, 8, 10, 12])}}))  
 
@@ -40,9 +39,9 @@ def create_model(normed_train_data, normed_test_data, train_labels, test_labels)
   model.add(layers.MaxPooling1D(pool_size={{choice([2, 3,  4, 5,  6, 7, 8])}}))
   model.add(layers.Flatten())#flatten for use in dense layers
   # Dense layers
-  model.add(layers.Dense(units={{choice([25, 30, 33, 35, 40])}},# kernel_initializer=initializer, 
+  model.add(layers.Dense(units={{choice([25, 30, 33, 35, 40])}}, 
 		activation='relu'))
-  model.add(layers.Dense(units=1, activation="linear"))#, #output layer
+  model.add(layers.Dense(units=1, activation="linear")) #output layer
   
   optimizer = tf.train.RMSPropOptimizer(0.001)
   model.compile(loss='mse', optimizer=optimizer, metrics=['mae', 'mse'])
@@ -85,13 +84,11 @@ def data():
   datasetA = dataset.copy()
 
   #Build dataset of galaxies
-  GroupA = datasetA.loc[dataset['name'].isin(notI)]# == Agals]
+  GroupA = datasetA.copy()
   GroupA = GroupA.drop(columns = 'name')
 
   smalldataset1 = GroupA.sample(frac = 1, random_state = 0) #dataset of 8400 rows
-
-  smalldataset = smalldataset1[smalldataset1.ZHL > -1.]#metallicity cut
-  smalldataset = smalldataset.drop(columns = 'ZHL')
+  smalldataset = smalldataset1.drop(columns = 'ZHL')
   smalldataset = smalldataset.drop(columns = 'xkpc')
   smalldataset = smalldataset.drop(columns = 'ykpc')
   #split dataset into training & testing
