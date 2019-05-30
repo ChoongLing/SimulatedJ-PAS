@@ -76,7 +76,6 @@ train_dataset = smalldataset.sample(frac=0.8,random_state=0)
 test_dataset = smalldataset.drop(train_dataset.index)
 
 
-
 #Gives the statistics of each band, not particularly relevant now
 train_stats = train_dataset.describe()
 train_stats.pop("age")
@@ -105,18 +104,14 @@ MidLayer = layers.MaxPooling1D(pool_size=8)(MidLayer)
 MidLayer =layers.Flatten()(MidLayer)#flatten for use in dense layers
 # Dense layers
 MidLayer = layers.Dense(units=40, activation='relu')(MidLayer)
-
 output_label = layers.Dense(units=1, activation="linear", #output layer
                      input_dim=40,)(MidLayer)
 
 model = keras.models.Model(input_spec, output_label)
 
-
 earlystop = EarlyStopping(monitor='mean_absolute_error', patience=250)
 callbacks_list = [earlystop]
-
 optimizer = tf.train.RMSPropOptimizer(0.001)
-
 
 model.compile(loss='mse', optimizer=optimizer, metrics=['mae', 'mse'])
 model.summary()
@@ -126,15 +121,12 @@ history = model.fit(
   normed_train_data, train_labels, batch_size = 128, callbacks = callbacks_list,
   epochs=5000, validation_split = 0.2, verbose=0)
 
-
 #tracks the values of errors, variable values etc.
 hist = pd.DataFrame(history.history)
 hist['epoch'] = history.epoch
 print(hist.tail())
 
-
 model.save('AgeForGroupIHyperas2Long.h5') #Save the model for testing
-
 
 #Error plot
 top = figure(plot_width=400, plot_height = 400, title = 'Error')
@@ -142,7 +134,6 @@ top.line(hist['epoch'], hist['mean_absolute_error'], color = 'blue')
 top.line(hist['epoch'], hist['val_mean_absolute_error'], color = 'orange')
 top.xaxis.axis_label = 'Epoch'
 top.yaxis.axis_label = 'Mean abs error'
-
 
 test_predictions = model.predict(normed_test_data).flatten() #make a prediction
 #Fit to the predictions
@@ -164,7 +155,6 @@ mid.xaxis.axis_label = 'True Value'
 mid.yaxis.axis_label = 'Predicted Value'
 
 p = gridplot([[top, mid]])
-
 bokeh.io.save(p, filename = 'ModelAgeForIHyperas2Long.html')
 
 #Same plots but saved as individual .png
