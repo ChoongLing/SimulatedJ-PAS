@@ -1,12 +1,9 @@
-
 import tensorflow as tf
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
 import pandas as pd
-#import matplotlib
-#matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import seaborn as sns
@@ -23,11 +20,6 @@ tf.enable_eager_execution()
 
 
 def norm(x):
-  #array = np.array(train_stats['std'])
-  #for i in x:
-    #if array[i] == 0.:
-      #return 0.
-    #else:
   return (x - mean) / deviation
 
 #Load in the stats for normalisation
@@ -70,81 +62,65 @@ for i in Lgals:
   split = i.split()
   notI.append(split[0])
   
-
-
 datasetA = dataset.copy()
 datasetB = dataset.copy()
 
 #Build dataset of galaxies
-GroupA = datasetA.loc[dataset['name'].isin(notI)]# == Agals]
-GroupA = GroupA.drop(columns = 'name')
+GroupA = datasetA.loc[dataset['name'].isin(notI)]#Select dataset for training
 
 smalldataset1 = GroupA.sample(frac = 1, random_state = 0) #dataset of 8400 rows
 
 #smalldataset = smalldataset1[smalldataset1.ZHL > -1.]#metallicity cut
 smalldataset = smalldataset1.drop(columns = 'xkpc')
 smalldataset = smalldataset.drop(columns = 'ykpc')
+
 #split dataset into training & testing
 train_dataset = smalldataset.sample(frac=0.8,random_state=0)
 test_dataset = smalldataset.drop(train_dataset.index)
-
-
 
 #Gives the statistics of each band, not particularly relevant now
 train_stats = train_dataset.describe()
 train_stats.pop("ZHL")
 train_stats = train_stats.transpose()
 #print train_stats
-#print dataset.isna().sum()
-
 
 train_labels = train_dataset.pop("ZHL")
 test_labels = test_dataset.pop("ZHL")
-
 
 #Normalise dataset
 normed_train_data = norm(train_dataset)
 normed_test_data = norm(test_dataset)
 
-
 #Build the CNN
 input_spec = layers.Input(shape=(32,)) #input spectra
 MidLayer = layers.Reshape((32, 1))(input_spec) #reshape for use in CNN
 # CNN layers
-MidLayer = layers.Conv1D(activation='relu',# kernel_initializer=initializer, 
-                padding="same", filters=30, kernel_size=8)(MidLayer)
-#MidLayer = layers.Conv1D(activation='relu',#kernel_initializer=initializer, 
-                #padding="same", filters=20, kernel_size=8)(MidLayer)
+MidLayer = layers.Conv1D(activation='relu',
+                padding="same", filters=20, kernel_size=6)(MidLayer)
+MidLayer = layers.Conv1D(activation='relu', 
+                padding="same", filters=20, kernel_size=8)(MidLayer)
 # Max pooling layer
 MidLayer = layers.MaxPooling1D(pool_size=8)(MidLayer)
 MidLayer =layers.Flatten()(MidLayer)#flatten for use in dense layers
 # Dense layers
-MidLayer = layers.Dense(units=40,# kernel_initializer=initializer, 
-               activation='relu')(MidLayer)
-#MidLayer = layers.Dropout(0.05)(MidLayer)
-#MidLayer = layers.Dense(units=33, #kernel_initializer=initializer, 
-               #activation='relu')(MidLayer)
+MidLayer = layers.Dense(units=40,activation='relu')(MidLayer)
 output_label = layers.Dense(units=1, activation="linear", #output layer
                      input_dim=35)(MidLayer)
 
-model = keras.models.Model(input_spec, output_label)
 
+model = keras.models.Model(input_spec, output_label)
 
 earlystop = EarlyStopping(monitor='mean_absolute_error', patience=250)
 callbacks_list = [earlystop]
-
 optimizer = tf.train.RMSPropOptimizer(0.001)
-
 
 model.compile(loss='mse', optimizer=optimizer, metrics=['mae', 'mse'])
 model.summary()
-
 
 history = model.fit(
   normed_train_data, train_labels, batch_size = 128, callbacks = callbacks_list,
   epochs=5000, validation_split = 0.2, verbose=0)
 
-#w1 = model.get_weights()
 #tracks the values of errors, variable values etc.
 hist = pd.DataFrame(history.history)
 hist['epoch'] = history.epoch
@@ -152,14 +128,12 @@ print(hist.tail())
 
 model.save('ZForGroupIHyperas1ShortNoCut.h5')
 
-
 #Error plot
 top = figure(plot_width=400, plot_height = 400, title = 'Error')
 top.line(hist['epoch'], hist['mean_absolute_error'], color = 'blue')
 top.line(hist['epoch'], hist['val_mean_absolute_error'], color = 'orange')
 top.xaxis.axis_label = 'Epoch'
 top.yaxis.axis_label = 'Mean abs error'
-
 
 test_predictions = model.predict(normed_test_data).flatten()
 print(len(test_predictions))
@@ -186,8 +160,7 @@ p = gridplot([[top, mid]])
 
 bokeh.io.save(p, filename = 'ModelZForIHyperas1ShortNoCut.html')
 
-
-
+#Same plots but as .png
 plt.plot(hist['epoch'], hist['mean_absolute_error'], color = 'black')
 plt.plot(hist['epoch'], hist['val_mean_absolute_error'], color = 'red')
 plt.xlabel('Epoch')
@@ -211,8 +184,6 @@ xa = np.linspace(min(error), max(error), 200)
 dx = result[1][1] - result[1][0]
 scale = len(error) * dx
 plt.plot(xa, mlab.normpdf(xa, mu, sigma) * scale, color = 'red')
-#plt.text(-1.0, 4000, "Std dev = " +str(stddev))
 plt.xlabel("Prediction Error")
 plt.ylabel("Count")
-#plt.title('log age (L)')
 plt.savefig('Training/ZHistHyperas1ShortNoCut.png')
