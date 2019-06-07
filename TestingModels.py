@@ -357,6 +357,7 @@ for phi in Lgals: #Iterate fitting over each galaxy
   plt.title('Predicted Age')
   fname = 'NotBroken/' + phi + 'GalGradients.png'
   plt.legend()
+  plt.tight_layout()
   plt.savefig(fname)
   
   #Plot of error in gradient determination for Z, age
@@ -557,6 +558,8 @@ ax_histx.set_xlim(ax_scatter.get_xlim())
 ax_histy.set_ylim(ax_scatter.get_ylim())
 
 plt.savefig('ScatteredHists.png')
+plt.rcParams.update({'font.size': 14})
+
 
 #Contour plot of age
 plt.clf()
