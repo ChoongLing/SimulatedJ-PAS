@@ -558,4 +558,28 @@ ax_histy.set_ylim(ax_scatter.get_ylim())
 
 plt.savefig('ScatteredHists.png')
 
+#Contour plot of age
+plt.clf()
+nbins=300
+k = kde.gaussian_kde([datrue,dapred])
+xi, yi = np.mgrid[datrue.min():datrue.max():nbins*1j, dapred.min():dapred.max():nbins*1j]
+zi = k(np.vstack([xi.flatten(), yi.flatten()]))
+plt.scatter(datrue, dapred, marker='x', color = 'grey', alpha = 0.2)
+plt.plot([8.25, 10.2], [8.25, 10.2], 'k')
+plt.contour(xi, yi, zi.reshape(xi.shape), cmap = 'hot')
+plt.xlabel('Age$_{spec}$')
+plt.ylabel('Age$_{pred}$')
+plt.savefig('AgeRetrained.png', bbox_inches = 'tight')
+
+#Contour plot of Z
+plt.clf()
+k = kde.gaussian_kde([dztrue,dzpred])
+xi, yi = np.mgrid[dztrue.min():dztrue.max():nbins*1j, dzpred.min():dzpred.max():nbins*1j]
+zi = k(np.vstack([xi.flatten(), yi.flatten()]))
+plt.scatter(dztrue, dzpred, marker='x', color = 'grey', alpha = 0.2)
+plt.plot([-1.25, 0.2], [-1.25, 0.2], 'k')
+plt.contour(xi, yi, zi.reshape(xi.shape), cmap = 'hot')
+plt.xlabel('Z$_{spec}$')
+plt.ylabel('Z$_{pred}$')
+plt.savefig('ZRetrained.png', bbox_inches = 'tight')
 
