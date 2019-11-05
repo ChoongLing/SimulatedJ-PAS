@@ -14,148 +14,14 @@ from scipy.optimize import least_squares
 from scipy.stats import linregress
 from scipy.stats import skewnorm
 import scipy.stats as stats
-import bokeh
-from bokeh.io import output_file, show
-from bokeh.layouts import gridplot
-from bokeh.models import ColumnDataSource
-from bokeh.plotting import figure
-from bokeh.models import Range1d
-from bokeh.models.glyphs import Quad
+import scipy
 from ApplyModel import ApplyModel
+from astropy.stats import mad_std
 
 
-#def norm(x):
-  ##array = np.array(train_stats['std'])
-  ##for i in x:
-    ##if array[i] == 0.:
-      ##return 0.
-    ##else:
-  #return (x - mean) / deviation
-
-
-## Define fitting function (linear)
-#def lin_func(p, x):
-     #a, b = p
-     #return a*x + b
-
-#def resid(p, x, y):
-    #return p[0]*x + p[1] - y 
-             
- 
-## Main fitting routine
-#def MyReg(xf, yf, exf, eyf, a0, b0, x0):
-    #par0 = a0, b0
-    
-    ## Standard solution
-    ##res_lsq = least_squares(resid, par0, args=(xf,yf))
-
-    ##rsl = least_squares(resid, par0, loss='soft_l1', f_scale=0.5, args=(xf,yf))
-    #rsl = least_squares(resid, par0, loss='cauchy', f_scale=0.5, args=(xf,yf))
-    ##rsl = least_squares(resid, par0, method='lm' f_scale=0.5, args=(xf,yf))
-
-    #af = rsl.x[0]
-    ## return zero point at z0
-    #bf = x0*rsl.x[0] + rsl.x[1]
-    ##print ("fit= %.3f  %.3f  " % (af, bf))
-
-    ## rxy coeff
-    #lr = linregress(xf, yf)
-    #rxy0 = lr[2]
-
-    ## MonteCarlo for error bars
-    #aff = np.zeros(100)
-    #bff = np.zeros(100)
-    #rxy = np.zeros(100)
-    #for i in range(100):
-        #xf1 = np.random.normal(loc=xf, scale=exf)
-        #yf1 = np.random.normal(loc=yf, scale=eyf)
-        #rsl1 = least_squares(resid, par0, loss='soft_l1', f_scale=0.1, args=(xf1,yf1))
-        #aff[i] = rsl1.x[0]
-        ## return zero point at z0
-        #bff[i] = x0*rsl1.x[0] + rsl1.x[1]
-        ## Correlation coefficient
-        #lrmc = linregress(xf1, yf1)
-        #rxy[i] = lrmc[2]
-
-    ## redefine best fit as median of distribution
-    #af = np.median(aff)
-    ## return zero point at z0
-    #bf = np.median(bff)
-    ##
-    #eaf = np.std(aff)
-    #ebf = np.std(bff)
-    ##print ("err(%.3f  %.3f)\n" % (eaf, ebf))
-
-    #erxy0 = np.std(rxy)
-
-    #parf = af, eaf, bf, ebf, rxy0, erxy0
-    #return parf
-
-
-#def MCFit(r, val):
-## This method does not assume any errors
-## The bootstrap takes care of it
-  #xdat = 1.0*r
-## Here choose which parameter to fit
-## Age
-##ydat = 1.0*age
-## Metallicity
-  #ydat = val#1.0*val
-  #ndat = xdat.shape[0]
-
-## Show results in a plot
-  #plt.scatter(xdat,ydat,color='grey', marker = 'x')
-  #xmin = np.min(xdat)
-  #xmax = np.max(xdat)
-
-## Standard least squares
-  #A = np.vstack([xdat, np.ones(len(xdat))]).T
-  #a0, b0 = np.linalg.lstsq(A, ydat, rcond=None)[0]
-##
-  #xfit = np.linspace(xmin, xmax, 200)
-  #yfit0 = a0*xfit + b0
-  #plt.plot(xfit,yfit0,'k',label='LSQ')
-
-## MonteCarlo results by bootstrapping sample
-## select random set comprising 75% of original sample
-  #nMC = 100
-  #slp = np.empty(nMC)
-  #zp = np.empty(nMC)
-
-  #nrun = 3*ndat/4
-  #nrun = int(nrun)
-  #xMC = np.empty(nrun)
-  #yMC = np.empty(nrun)
-
-  #for iMC in range(nMC):
-    #idx = np.random.permutation(ndat)
-    #for i in range(nrun):
-      #xMC[i] = xdat[idx[i]]
-      #yMC[i] = ydat[idx[i]]
-
-    #A = np.vstack([xMC, np.ones(nrun)]).T
-    #slp[iMC], zp[iMC] = np.linalg.lstsq(A, yMC, rcond=None)[0]
-    
-  #yfit1 = np.mean(slp) * xfit + np.mean(zp)
-  #plt.plot(xfit, yfit1, 'r--', label = 'MC')
-    
-  #return a0, np.mean(slp), np.std(slp)
-
-## Calculate simple stats of bootstrapped values to give
-## mean, median and stdev
-  ##print("*** LINEAR FIT  (slope / intercept) ***")
-  ##print("Best value:  %.6f  /  %6f" % (a0,b0))
-  ##print("Median:  %.6f  /  %.6f" % (np.median(slp),np.median(zp)))
-  ##print("Mean:  %.6f  /  %.6f" % (np.mean(slp),np.mean(zp)))
-  ##print("Standard deviation:  %.6f  /  %.6f" % (np.std(slp),np.std(zp)))
-
-#def gaussian(x, mu, sig):
-    #return np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
-
-#Load in the stats for normalisation
-stats = np.loadtxt('../ChiStats.dat')
-mean = stats[:, 0]
-deviation = stats[:, 1]
+Stats = np.loadtxt('../ChiStats.dat')
+mean = Stats[:, 0]
+deviation = Stats[:, 1]
 
 rnames = ['Galaxy', 'arcsec', 'Reff']
 Reff=pd.read_table('../reff.dat', delim_whitespace = True, names = rnames)
@@ -202,14 +68,14 @@ for i in galx:
 
 
 #Load saved NNs
-IZmodel = tf.keras.models.load_model('ZForGroupIChi70.h5')
-IAgemodel = tf.keras.models.load_model('AgeForGroupIChi70.h5')
-JZmodel = tf.keras.models.load_model('ZForGroupJChi70.h5')
-JAgemodel = tf.keras.models.load_model('AgeForGroupJChi70.h5')
-KZmodel = tf.keras.models.load_model('ZForGroupKChi70.h5')
-KAgemodel = tf.keras.models.load_model('AgeForGroupKChi70.h5')
-LZmodel = tf.keras.models.load_model('ZForGroupLChi70.h5')
-LAgemodel = tf.keras.models.load_model('AgeForGroupLChi70.h5')
+IZmodel = tf.keras.models.load_model('ZForGroupIChi75.h5')
+IAgemodel = tf.keras.models.load_model('AgeForGroupIChi75.h5')
+JZmodel = tf.keras.models.load_model('ZForGroupJChi75.h5')
+JAgemodel = tf.keras.models.load_model('AgeForGroupJChi75.h5')
+KZmodel = tf.keras.models.load_model('ZForGroupKChi75.h5')
+KAgemodel = tf.keras.models.load_model('AgeForGroupKChi75.h5')
+LZmodel = tf.keras.models.load_model('ZForGroupLChi75.h5')
+LAgemodel = tf.keras.models.load_model('AgeForGroupLChi75.h5')
 
 
 #Idapred, Idatrue, Idzpred, Idztrue, IMCagrad, IMCzgrad, IAerror, IZerror 
@@ -230,13 +96,22 @@ datrue = np.concatenate((GroupI['datrue'], GroupJ['datrue'], GroupK['datrue'], G
 dzpred = np.concatenate((GroupI['dzpred'], GroupJ['dzpred'], GroupK['dzpred'], GroupL['dzpred']))
 dztrue = np.concatenate((GroupI['dztrue'], GroupJ['dztrue'], GroupK['dztrue'], GroupL['dztrue']))
 
-
-
 MCagrad = np.concatenate((GroupI['MCagrad'], GroupJ['MCagrad'], GroupK['MCagrad'], GroupL['MCagrad']))
 MCzgrad = np.concatenate((GroupI['MCzgrad'], GroupJ['MCzgrad'], GroupK['MCzgrad'], GroupL['MCzgrad']))
 ageerror = np.concatenate((GroupI['Aerror'], GroupJ['Aerror'], GroupK['Aerror'], GroupL['Aerror']))
 zerror = np.concatenate((GroupI['Zerror'], GroupJ['Zerror'], GroupK['Zerror'], GroupL['Zerror']))
 
+
+allnames = GroupI['name']+ GroupJ['name']+ GroupK['name']+ GroupL['name']
+TrueAge = np.concatenate((GroupI['trueage'], GroupJ['trueage'], GroupK['trueage'], GroupL['trueage']))
+PredAge = np.concatenate((GroupI['predage'], GroupJ['predage'], GroupK['predage'], GroupL['predage']))
+PredZ = np.concatenate((GroupI['predz'], GroupJ['predz'], GroupK['predz'], GroupL['predz']))
+TrueZ = np.concatenate((GroupI['truez'], GroupJ['truez'], GroupK['truez'], GroupL['truez']))
+
+#np.save('SetB_grad_age', TrueAge)
+#np.save('SetB_grad_z', TrueZ)
+
+plt.rcParams.update({'font.size': 14})
 
 plt.clf()
 #Plot a scatter plot with histograms
@@ -260,7 +135,7 @@ ax_scatter.errorbar(MCzgrad, MCagrad,  yerr = ageerror, xerr = zerror, fmt = 'kx
 
 # now determine nice limits by hand:
 binwidth = 0.05
-lim = 1.5#np.ceil(np.abs([MCzgrad, MCagrad]).max() / binwidth) * binwidth
+lim = 1.#np.ceil(np.abs([MCzgrad, MCagrad]).max() / binwidth) * binwidth
 ax_scatter.set_xlim((-lim, lim))
 ax_scatter.set_ylim((-lim, lim))
 ax_scatter.set_xlabel('grad(Z$_{CNN}$) - grad(Z$_{spec}$)')
@@ -279,9 +154,9 @@ ax_histy.set_xlabel('Count')
 ax_histy.xaxis.label.set_fontsize(14)
 
 
-plt.savefig('ScatteredHistsAllSetBChi70.pdf')
+plt.savefig('ScatteredHistsSetBChi75.pdf', bbox_inches = 'tight')
 
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 16})
 
 datrue = np.array(datrue)
 dztrue = np.array(dztrue)
@@ -301,7 +176,7 @@ plt.xlim(9.2, 10.3)
 plt.ylim(9.2, 10.3)
 plt.xlabel('log(Age$_{spec})$')
 plt.ylabel('log(Age$_{CNN})$')
-plt.savefig('AgeAllSetB70.pdf', bbox_inches = 'tight')
+plt.savefig('AgeSetBChi75.pdf', bbox_inches = 'tight')
 
 #Contour plot of Z
 plt.clf()
@@ -315,7 +190,250 @@ plt.xlim(-0.65, 0.25)
 plt.ylim(-0.65, 0.25)
 plt.xlabel('log(Z$_{spec}$/Z$_{sun}$)')
 plt.ylabel('log(Z$_{CNN}$/Z$_{sun}$)')
-plt.savefig('ZAllSetB70.pdf', bbox_inches = 'tight')
+plt.savefig('ZSetBChi75.pdf', bbox_inches = 'tight')
+
+
+deltaage = []
+deltaz = []
+for i in range(0, len(dztrue)):
+  tempa = dapred[i] - datrue[i]
+  tempz = dzpred[i] - dztrue[i]
+  deltaage.append(tempa)
+  deltaz.append(tempz)
+
+
+devage = mad_std(deltaage)#np.std(deltaage)
+devz = mad_std(deltaz,axis = None)#np.std(deltaz)
+print('age = ' + str(devage))
+print('Z = '+ str(devz))
 
 
 
+#posheads = ['name', 'n1', 'n2', 'PA', 'ba', 'kpcarc']
+#positions = pd.read_table('../Galaxy_Parameters.txt', delim_whitespace = True, names = posheads)
+
+#inclin = []
+#for phi in Igals:
+  #Lpos = positions.loc[positions['name'].isin([phi])] 
+  #inc = float(Lpos['PA'])
+  ##print(inc)
+  #inclin.append(inc)
+#for phi in Jgals:
+  #Lpos = positions.loc[positions['name'].isin([phi])] 
+  #inc = float(Lpos['PA'])
+  ##print(inc)
+  #inclin.append(inc)
+#for phi in Kgals:
+  #Lpos = positions.loc[positions['name'].isin([phi])] 
+  #inc = float(Lpos['PA'])
+  ##print(inc)
+  #inclin.append(inc)
+#for phi in Lgals:
+  #Lpos = positions.loc[positions['name'].isin([phi])] 
+  #inc = float(Lpos['PA'])
+  ##print(inc)
+  #inclin.append(inc)
+
+#plt.clf()
+#plt.plot(inclin, MCagrad, 'ro', label = 'age')
+#plt.plot(inclin, MCzgrad, 'ks', label = 'Z')
+#plt.ylim([1, -1])
+#plt.xlabel('inclination')
+#plt.ylabel('gradient')
+#plt.savefig('IncVsGrad.pdf')
+
+agradsig = mad_std(MCagrad)#np.std(MCagrad)#np.std(Asorted)
+zgradsig = mad_std(MCzgrad)#np.std(MCzgrad)#np.std(Zsorted)
+
+print('Age gradient dispersion = ' + str(agradsig))
+print('Z gradient dispersion = ' + str(zgradsig))
+
+mheads = ['gal', 'mass', 'dunno']
+masses = pd.read_table('../masses.dat', delim_whitespace = True, names = mheads)
+mass = np.array(masses['mass'])
+
+ellipticallist = open('../Ellipticals.txt')
+spirallist = open('../Spirals.txt')
+ells = []
+for i in ellipticallist:
+  split = i.split()
+  ells.append(split[0])
+spis = []
+for i in spirallist:
+  split = i.split()
+  spis.append(split[0])
+  
+  
+plt.clf()
+plt.rcParams.update({'font.size': 16})
+
+lows = []
+lowmids = []
+himids = []
+highs = []
+lowe = []
+lowmide = []
+himide = []
+highe = []
+
+for i in range(0, len(PredAge)):
+  if allnames[i] in ells:
+    plt.scatter(mass[i], PredAge[i], marker = 'o',  facecolor='none', edgecolor='r')
+    if mass[i] < 10.:
+      lowe.append(PredAge[i])
+    elif mass[i] < 10.5:
+      lowmide.append(PredAge[i])
+    elif mass[i] < 11.:
+      himide.append(PredAge[i])
+    else:
+      highe.append(PredAge[i])
+      
+  elif allnames[i] in spis:
+    plt.scatter(mass[i], PredAge[i], marker ='s', facecolor='none', edgecolor='k')
+    if mass[i] < 10.:
+      lows.append(PredAge[i])
+    elif mass[i] < 10.5:
+      lowmids.append(PredAge[i])
+    elif mass[i] < 11.:
+      himids.append(PredAge[i])
+    else:
+      highs.append(PredAge[i])
+
+plt.scatter(mass[-7], PredAge[-7], marker = 'o',  facecolor='none', edgecolor='r', label = 'Early Types')
+plt.scatter(mass[0], PredAge[0], marker ='s', facecolor='none', edgecolor='k', label = 'Late Types')
+
+#print(lowe, highe)
+massbins = np.array([9.5, 10.25, 10.75, 11.25])
+ave = []
+deve = []
+avs = []
+devs = []
+
+ave.append(np.median(lowe))
+ave.append(np.median(lowmide))
+ave.append(np.median(himide))
+ave.append(np.median(highe))
+deve.append(mad_std(lowe))
+deve.append(mad_std(lowmide))
+deve.append(mad_std(himide))
+deve.append(mad_std(highe))
+
+avs.append(np.median(lows))
+avs.append(np.median(lowmids))
+avs.append(np.median(himids))
+avs.append(np.median(highs))
+devs.append(mad_std(lows))
+devs.append(mad_std(lowmids))
+devs.append(mad_std(himids))
+devs.append(mad_std(highs))
+
+plt.errorbar(massbins, ave, yerr = deve, c ='r', marker = 'o', ms = 15, linestyle = ' ')
+plt.errorbar(massbins, avs, yerr = devs, c ='k', marker = 's', ms = 15, linestyle = ' ')
+
+
+plt.xlabel('log(M$_\star$ / M$_\odot$)')
+plt.ylabel('grad(Age$_{CNN, B}$/Gyr)/ dex/r$_{eff}$')
+plt.ylim([-0.4, 0.4])
+plt.legend()
+plt.savefig('MassVAgeGradientSetB.pdf')
+plt.clf()
+
+dA = []
+dZ = []
+for i in range(0, len(TrueAge)):
+  d = TrueAge[i] - PredAge[i]
+  dA.append(d)
+  d = TrueZ[i] - PredZ[i]
+  dZ.append(d)
+  
+lows = []
+lowmids = []
+himids = []
+highs = []
+lowe = []
+lowmide = []
+himide = []
+highe = []
+
+for i in range(0, len(PredZ)):
+  if allnames[i] in ells:
+    plt.scatter(mass[i], PredZ[i], marker = 'o',  facecolor='none', edgecolor='r')
+    if mass[i] < 10.:
+      lowe.append(PredZ[i])
+    elif mass[i] < 10.5:
+      lowmide.append(PredZ[i])
+    elif mass[i] < 11.:
+      himide.append(PredZ[i])
+    else:
+      highe.append(PredZ[i])
+      
+  elif allnames[i] in spis:
+    plt.scatter(mass[i], PredZ[i], marker ='s', facecolor='none', edgecolor='k')
+    if mass[i] < 10.:
+      lows.append(PredZ[i])
+    elif mass[i] < 10.5:
+      lowmids.append(PredZ[i])
+    elif mass[i] < 11.:
+      himids.append(PredZ[i])
+    else:
+      highs.append(PredZ[i])
+
+plt.scatter(mass[-7], PredZ[-7], marker = 'o',  facecolor='none', edgecolor='r', label = 'Early Types')
+plt.scatter(mass[0], PredZ[0], marker ='s', facecolor='none', edgecolor='k', label = 'Late Types')
+
+#print(lowe, highe)
+massbins = np.array([9.5, 10.25, 10.75, 11.25])
+ave = []
+deve = []
+avs = []
+devs = []
+
+ave.append(np.median(lowe))
+ave.append(np.median(lowmide))
+ave.append(np.median(himide))
+ave.append(np.median(highe))
+deve.append(mad_std(lowe))
+deve.append(mad_std(lowmide))
+deve.append(mad_std(himide))
+deve.append(mad_std(highe))
+
+avs.append(np.median(lows))
+avs.append(np.median(lowmids))
+avs.append(np.median(himids))
+avs.append(np.median(highs))
+devs.append(mad_std(lows))
+devs.append(mad_std(lowmids))
+devs.append(mad_std(himids))
+devs.append(mad_std(highs))
+
+plt.errorbar(massbins, ave, yerr = deve, c ='r', marker = 'o', ms = 15, linestyle = ' ')
+plt.errorbar(massbins, avs, yerr = devs, c ='k', marker = 's', ms = 15, linestyle = ' ')
+
+
+plt.xlabel('log(M$_\star$ / M$_\odot$)')
+plt.ylabel('grad(Z$_{CNN, B}$/Gyr)/ dex/r$_{eff}$')
+plt.ylim([-0.4, 0.4])
+plt.legend()
+plt.savefig('MassVZGradientSetB.pdf')
+
+dA = []
+dZ = []
+for i in range(0, len(TrueAge)):
+  d = TrueAge[i] - PredAge[i]
+  dA.append(d)
+  d = TrueZ[i] - PredZ[i]
+  dZ.append(d)
+  
+  
+  
+
+plt.clf()
+plt.scatter(TrueAge, PredAge, label = 'age', facecolor = 'k')
+plt.scatter(TrueZ, PredZ, label = 'Z', facecolor = 'r')
+plt.xlabel('Spec Gradient (B) ')
+plt.ylabel('CNN Gradient (B)')
+plt.plot([-1.5, 1.5], [-1.5, 1.5], color = 'grey')
+plt.xlim([-1.5, 1.5])
+plt.ylim([-1.5, 1.5])
+plt.legend()
+plt.savefig('GradsSetB.pdf')

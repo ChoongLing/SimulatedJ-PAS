@@ -177,6 +177,10 @@ def ApplyModel(Agemodel, Zmodel, data, gals):
   ageerror = []
   RZ = []
   RA = []
+  TA = []
+  PA = []
+  TZ = []
+  PZ = []
 
   #compile saved NNs
   Zmodel.compile(loss='mse',
@@ -185,7 +189,7 @@ def ApplyModel(Agemodel, Zmodel, data, gals):
   Agemodel.compile(loss='mse',
                   optimizer=tf.train.RMSPropOptimizer(0.001),
                   metrics=['mae', 'mse'])
-
+  print("************************************")
   #Iterate over each galaxy
   for phi in gals:
     print(phi)
@@ -197,7 +201,6 @@ def ApplyModel(Agemodel, Zmodel, data, gals):
     #print('norm worked')
     thisr = Reff.loc[Reff['Galaxy'].isin([phi])]
     reff=  thisr['Reff'].values #r_eff for this galaxy
-
     smaller = galaxy.sample(frac = 1, random_state = 0) #Randomise order of dataset
  
   
@@ -313,8 +316,7 @@ def ApplyModel(Agemodel, Zmodel, data, gals):
   
     for i in ra:
       RA.append(i)
-  
-  
+
     #************************************************************
 
     #Values for outputting for summaries
@@ -339,7 +341,7 @@ def ApplyModel(Agemodel, Zmodel, data, gals):
     a3, b3, c3 = MCFit(ra, apred)
     plt.ylabel('log(Age$_{pred}$)')
 
-    fname = 'FullDataset/' + phi + 'GalGrad70.pdf'
+    fname = 'Morphology/' + phi + 'GalGrad70.pdf'
     plt.legend()
     plt.tight_layout()
     plt.savefig(fname)
@@ -352,7 +354,7 @@ def ApplyModel(Agemodel, Zmodel, data, gals):
     plt.plot(gaussx, y0, 'k',label = 'Spec Z')
     plt.plot(gaussx, y1, 'r', label = 'Predicted Z')
     plt.xlabel('Gradient')
-    fname = 'FullDataset/' + phi + 'ZCurve70.pdf'
+    fname = 'Morphology/' + phi + 'ZCurve70.pdf'
     plt.legend()
     plt.savefig(fname)
   
@@ -365,7 +367,7 @@ def ApplyModel(Agemodel, Zmodel, data, gals):
     plt.plot(gaussx, y3, 'r', label = 'Predicted age')
     plt.xlabel('Gradient')
     #plt.ylabel('Probability')
-    fname = 'FullDataset/' + phi + 'AgeCurve70.pdf'
+    fname = 'Morphology/' + phi + 'AgeCurve70.pdf'
     plt.legend()
     plt.savefig(fname)
   
@@ -381,7 +383,7 @@ def ApplyModel(Agemodel, Zmodel, data, gals):
     plt.plot([min(zpred), max(zpred)], [min(zpred), max(zpred)], 'r')
     plt.xlabel('log(Z$_{spec}$/Z$_{sun}$)')
     plt.ylabel('log(Z$_{CNN}$/Z$_{sun}$)')
-    plt.savefig('FullDataset/' + phi + 'TrueVsPred70.pdf')
+    plt.savefig('Morphology/' + phi + 'TrueVsPred70.pdf')
 
 
     dz = b1 - b0#Difference in MC gradient
@@ -393,7 +395,12 @@ def ApplyModel(Agemodel, Zmodel, data, gals):
     ageerror.append(Aerror) #Error in age gradient for this galaxy
     Zerror = np.sqrt(c0**2 + c1**2)
     zerror.append(Zerror) #Error in Z gradient
-  
+    
+    TA.append(b2)
+    PA.append(b3)
+    TZ.append(b0)
+    PZ.append(b1)
+
     #lowage = da - Aerror
     #highage = da + Aerror
     #lowzed = dz - Zerror
@@ -412,6 +419,12 @@ def ApplyModel(Agemodel, Zmodel, data, gals):
   output['MCzgrad'] = MCzgrad
   output['Aerror'] = ageerror
   output['Zerror'] = zerror
+  output['trueage'] = TA
+  output['predage'] = PA
+  output['truez'] = TZ
+  output['predz'] = PZ
+  output['name'] = gals
+  
   #return dapred, datrue, dzpred, dztrue, MCagrad, MCzgrad, Aerror, Zerror
   return output
     
