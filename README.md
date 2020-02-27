@@ -15,4 +15,4 @@ TrainZModel.py and TrainAgeModel.py: As with BestANN*.py above, but trains a CNN
 TestingModels.py: Code that takes a trained model saved as a .h5 file and tests it on a given dataset. Creates plots of the quality of predictions, predicted and spectroscopic code against radius and a gradient (with errors) determined for each galaxy and then a summary for the full dataset.
 
 # References
-Liew-Cain et al. (in prep)
+Liew-Cain et al. 2020 (submitted; preprint at https://arxiv.org/abs/2002.08278)
